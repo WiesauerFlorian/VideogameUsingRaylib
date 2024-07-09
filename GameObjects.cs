@@ -16,6 +16,7 @@ public class Player : GameObjects
     Post post = new Post();
     Stone stone = new Stone();
     Platforms platform = new Platforms();
+    FlyingEnemy flyingEnemy = new FlyingEnemy();
     public override void Update()
     {
         Rectangle player = new Rectangle(position.X, position.Y, 60, 60);
@@ -26,6 +27,7 @@ public class Player : GameObjects
 
         enemy.Follow(ref position, pole);
         enemy.Render();
+        flyingEnemy.Render();
         #region CheckCollision
         enemy.EnemyColision(player);
         stone.Collision(player);
@@ -193,6 +195,7 @@ public class Enemy : GameObjects
 public class Stone : GameObjects
 {
     Vector2[] stoneArr = new Vector2[5]; // Array For The 5 Stones
+    
     public void FillArr()
     {
         stoneArr[0] = new Vector2(320, 20);
@@ -200,7 +203,7 @@ public class Stone : GameObjects
         stoneArr[2] = new Vector2(960, 20);
         stoneArr[3] = new Vector2(1260, 20);
         stoneArr[4] = new Vector2(120, 20);
-        }
+    }
     public override void Render()
     {
         double timer = Raylib.GetTime();
@@ -377,3 +380,15 @@ public class Platforms : GameObjects
         return "no Collision";
     }
 } // working
+public class FlyingEnemy : GameObjects
+{
+    Vector2 position = new Vector2(900, 100);
+    public override void Update()
+    {
+        
+    }
+    public override void Render()
+    {
+        Raylib.DrawCircle((int)position.X, (int)position.Y, 30, Color.DarkGreen);
+    }
+}
