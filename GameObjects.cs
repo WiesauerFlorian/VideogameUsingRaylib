@@ -154,9 +154,7 @@ public class Enemy : GameObjects
     Vector2 position = new Vector2(800, 860);
     Vector2 position2 = new Vector2(1300, 860);
     public override void Update()
-    {
-
-    }
+    { }
     public void Follow(ref Vector2 p, Rectangle post)
     {
         if (p.X > position.X)
@@ -197,14 +195,12 @@ public class Stone : GameObjects
     Vector2[] stoneArr = new Vector2[5]; // Array For The 5 Stones
     public void FillArr()
     {
-        int number = 0;
-        foreach (var item in stoneArr)
-        {
-            float random = Random.Shared.Next(0, 1830);
-            stoneArr[number] = new Vector2(random, 20);
-            number++;
+        stoneArr[0] = new Vector2(320, 20);
+        stoneArr[1] = new Vector2(640, 20);
+        stoneArr[2] = new Vector2(960, 20);
+        stoneArr[3] = new Vector2(1260, 20);
+        stoneArr[4] = new Vector2(120, 20);
         }
-    }
     public override void Render()
     {
         double timer = Raylib.GetTime();
@@ -214,7 +210,7 @@ public class Stone : GameObjects
         }
         if (timer > 20)
         {
-            Raylib.DrawCircle((int)stoneArr[1].X, (int)stoneArr[1].Y, 20, Color.Brown);
+            Raylib.DrawCircle((int)stoneArr[1].X, (int)stoneArr[1].Y , 20, Color.Brown);
         }
         if (timer > 30)
         {
@@ -235,7 +231,7 @@ public class Stone : GameObjects
         {
             if (stoneArr[i].Y < 820)
             {
-                stoneArr[i].Y += 8;
+                stoneArr[i].Y += 4;
                 Render();
             }
             else
@@ -247,33 +243,27 @@ public class Stone : GameObjects
 
         }
     }
-
     internal void Collision(Rectangle player)
     {
         if (Raylib.CheckCollisionCircleRec(stoneArr[1], 20, player))
         {
-            Console.WriteLine("Colision");
-            Raylib.CloseWindow();
+            Console.WriteLine("Collision");
         }
-        if (Raylib.CheckCollisionCircleRec(stoneArr[2], 20, player))
+        if (Raylib.CheckCollisionCircleRec(stoneArr[2],  20, player))
         {
-            Console.WriteLine("Colision");
-            Raylib.CloseWindow();
+            Console.WriteLine("Collision");
         }
         if (Raylib.CheckCollisionCircleRec(stoneArr[3], 20, player))
         {
-            Console.WriteLine("Colision");
-            Raylib.CloseWindow();
+            Console.WriteLine("Collilsion");
         }
         if (Raylib.CheckCollisionCircleRec(stoneArr[4], 20, player))
         {
-            Console.WriteLine("Colision");
-            Raylib.CloseWindow();
+            Console.WriteLine("Collision");
         }
         if (Raylib.CheckCollisionCircleRec(stoneArr[0], 20, player))
         {
-            Console.WriteLine("Colision");
-            Raylib.CloseWindow();
+            Console.WriteLine("Collision");
         }
 
     }
