@@ -7,6 +7,7 @@ public abstract class GameObjects
 }
 public class Player : GameObjects
 {
+    double timer = Raylib.GetTime();
     public Vector2 position = new Vector2(320, 820);
     bool isGrounded = true;
     const int jumpheight = 800;
@@ -27,7 +28,11 @@ public class Player : GameObjects
 
         enemy.Follow(ref position, pole);
         enemy.Render();
-        flyingEnemy.Render();
+        if (timer > 60)
+        {
+            flyingEnemy.Render();
+            flyingEnemy.Follow(position);
+        }
         #region CheckCollision
         enemy.EnemyColision(player);
         stone.Collision(player);
@@ -195,7 +200,7 @@ public class Enemy : GameObjects
 public class Stone : GameObjects
 {
     Vector2[] stoneArr = new Vector2[5]; // Array For The 5 Stones
-    
+
     public void FillArr()
     {
         stoneArr[0] = new Vector2(320, 20);
@@ -213,7 +218,7 @@ public class Stone : GameObjects
         }
         if (timer > 20)
         {
-            Raylib.DrawCircle((int)stoneArr[1].X, (int)stoneArr[1].Y , 20, Color.Brown);
+            Raylib.DrawCircle((int)stoneArr[1].X, (int)stoneArr[1].Y, 20, Color.Brown);
         }
         if (timer > 30)
         {
@@ -252,7 +257,7 @@ public class Stone : GameObjects
         {
             Console.WriteLine("Collision");
         }
-        if (Raylib.CheckCollisionCircleRec(stoneArr[2],  20, player))
+        if (Raylib.CheckCollisionCircleRec(stoneArr[2], 20, player))
         {
             Console.WriteLine("Collision");
         }
@@ -385,10 +390,31 @@ public class FlyingEnemy : GameObjects
     Vector2 position = new Vector2(900, 100);
     public override void Update()
     {
-        
+
     }
     public override void Render()
     {
         Raylib.DrawCircle((int)position.X, (int)position.Y, 30, Color.DarkGreen);
+    }
+    public void Follow(Vector2 player)
+    {
+        if (position.X > player.X)
+        {
+            position.X -= 2;
+        }
+        else if (position.X < player.X)
+        {
+            position.X += 2;
+        }
+
+        if (position.Y < player.Y)
+        {
+            position.Y += 2;
+        }
+        else if (position.Y > player.Y)
+        {
+            position.Y -= 2;
+        }
+
     }
 }

@@ -38,7 +38,7 @@ class game
             #region stone
             if (timer > 10)
             {
-              stone.Update();
+                stone.Update();
             }
             #endregion
         }
