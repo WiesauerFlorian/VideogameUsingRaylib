@@ -392,18 +392,26 @@ public class Platforms : GameObjects
 public class FlyingEnemy : GameObjects
 {
     Vector2 position = new Vector2(900, 100);
-    int enemySpeed = 2;
-    float velocity_Y;
-    float velocity_X;
+    int enemySpeed;
     public override void Update() { }
     public override void Render()
     {
-        Raylib.DrawCircle((int)position.X, (int)position.Y, 30, Color.DarkGreen);
+        if (Raylib.GetTime() > 90)
+        {
+            Raylib.DrawCircle((int)position.X, (int)position.Y, 30, Color.Red);
+            enemySpeed = 3;
+        }
+        else
+        {
+            Raylib.DrawCircle((int)position.X, (int)position.Y, 30, Color.DarkGreen);
+            enemySpeed = 2;
+        }
     }
     public void Follow(Vector2 player, Rectangle pole, Rectangle pL, Rectangle pR)
     {
         Rectangle enemy = new Rectangle(position, 30, 30);
         Console.WriteLine(position);
+
 
         if (position.X > player.X)
         {

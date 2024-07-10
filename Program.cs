@@ -32,13 +32,13 @@ class game
             post.Render();
             platforms.Render();
             // Stop drawing
-            Raylib.EndDrawing();
-            #endregion
             #region stone
             if (timer > 10)
             {
                 stone.Update();
             }
+            #endregion
+            Raylib.EndDrawing();
             #endregion
         }
     }
