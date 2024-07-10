@@ -18,7 +18,11 @@ public class Player : GameObjects
     Stone stone = new Stone();
     Platforms platform = new Platforms();
     FlyingEnemy flyingEnemy = new FlyingEnemy();
+
     public override void Update()
+    {
+    }
+    public void UpdatePlayer(Vector2[] stoneArr)
     {
         double timer = Raylib.GetTime();
         Rectangle player = new Rectangle(position.X, position.Y, 60, 60);
@@ -36,10 +40,10 @@ public class Player : GameObjects
         {
             flyingEnemy.Render();
             flyingEnemy.Follow(position, pole, pL, pR);
+            flyingEnemy.Collision(player);
         }
         #region CheckCollision
-        stone.Collision(player);
-        flyingEnemy.Collision(player);
+        stone.Collision(player, ref stoneArr);
         string side = post.CheckCollision(ref position, playerSpeed);
         switch (side)
         {
@@ -112,6 +116,9 @@ public class Player : GameObjects
                 position.Y = pR.Y + pR.Height;
                 break;
         }
+
+
+
         #endregion
         #region Movement
         if (Raylib.IsKeyDown(KeyboardKey.D)) // moves to the right
@@ -154,6 +161,7 @@ public class Player : GameObjects
         }
         #endregion
     }
+
     public override void Render()
     {
         // Draws Player
@@ -202,50 +210,46 @@ public class Enemy : GameObjects
     }
 } // working
 public class Stone : GameObjects
-{
-    Vector2[] stoneArr = new Vector2[5]; // Array For The 5 Stones
-
-    public void FillArr()
-    {
-        stoneArr[0] = new Vector2(320, 20);
-        stoneArr[1] = new Vector2(640, 20);
-        stoneArr[2] = new Vector2(960, 20);
-        stoneArr[3] = new Vector2(1260, 20);
-        stoneArr[4] = new Vector2(120, 20);
-    }
+{   
     public override void Render()
+    {
+    }
+    public override void Update()
+    {       
+    }
+    internal void RenderRocks(ref Vector2[] stoneArr)
     {
         double timer = Raylib.GetTime();
         if (timer > 60) return;
         if (timer > 10)
         {
-            Raylib.DrawCircle((int)stoneArr[0].X, (int)stoneArr[0].Y, 20, Color.Brown);
+            Raylib.DrawCircle((int)stoneArr[0].X, (int)stoneArr[0].Y, 30, Color.Brown);
         }
         if (timer > 20)
         {
-            Raylib.DrawCircle((int)stoneArr[1].X, (int)stoneArr[1].Y, 20, Color.Brown);
+            Raylib.DrawCircle((int)stoneArr[1].X, (int)stoneArr[1].Y, 30, Color.Brown);
         }
         if (timer > 30)
         {
-            Raylib.DrawCircle((int)stoneArr[2].X, (int)stoneArr[2].Y, 20, Color.Brown);
+            Raylib.DrawCircle((int)stoneArr[2].X, (int)stoneArr[2].Y, 30, Color.Brown);
         }
         if (timer > 40)
         {
-            Raylib.DrawCircle((int)stoneArr[3].X, (int)stoneArr[3].Y, 20, Color.Brown);
+            Raylib.DrawCircle((int)stoneArr[3].X, (int)stoneArr[3].Y, 30, Color.Brown);
         }
         if (timer > 50)
         {
-            Raylib.DrawCircle((int)stoneArr[4].X, (int)stoneArr[4].Y, 20, Color.Brown);
+            Raylib.DrawCircle((int)stoneArr[4].X, (int)stoneArr[4].Y, 30, Color.Brown);
         }
     }
-    public override void Update()
+    internal void UpdateRocks(Vector2[] stoneArr)
     {
         for (int i = 0; i < stoneArr.Length; i++)
         {
-            if (stoneArr[i].Y < 820)
+            if (stoneArr[i].Y < 850)
             {
                 stoneArr[i].Y += 4;
-                Render();
+                RenderRocks(ref stoneArr);
             }
             else
             {
@@ -255,29 +259,30 @@ public class Stone : GameObjects
             }
         }
     }
-    internal void Collision(Rectangle player)
+    internal void Collision(Rectangle player, ref Vector2[] stoneArr)
     {
-        if (Raylib.CheckCollisionCircleRec(stoneArr[1], 20, player))
+        double timer = Raylib.GetTime();
+        if(timer > 60) return;
+        if (timer > 10)
         {
-            Console.WriteLine("Collision");
+            if(Raylib.CheckCollisionCircleRec(stoneArr[0], 30, player)) Raylib.CloseWindow();
         }
-        if (Raylib.CheckCollisionCircleRec(stoneArr[2], 20, player))
+        if (timer > 20)
         {
-            Console.WriteLine("Collision");
+            if (Raylib.CheckCollisionCircleRec(stoneArr[1], 30, player)) Raylib.CloseWindow();
         }
-        if (Raylib.CheckCollisionCircleRec(stoneArr[3], 20, player))
+        if (timer > 30)
         {
-            Console.WriteLine("Collilsion");
+            if (Raylib.CheckCollisionCircleRec(stoneArr[2], 30, player)) Raylib.CloseWindow();
         }
-        if (Raylib.CheckCollisionCircleRec(stoneArr[4], 20, player))
+        if (timer > 40)
         {
-            Console.WriteLine("Collision");
+            if (Raylib.CheckCollisionCircleRec(stoneArr[3], 30, player)) Raylib.CloseWindow();
         }
-        if (Raylib.CheckCollisionCircleRec(stoneArr[0], 20, player))
+        if (timer > 50)
         {
-            Console.WriteLine("Collision");
+            if (Raylib.CheckCollisionCircleRec(stoneArr[4], 30, player)) Raylib.CloseWindow();
         }
-
     }
 } // not working (the collision box of the stones is in the top left corner)
 public class Post : GameObjects
