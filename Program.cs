@@ -6,7 +6,7 @@ class game
         Player player = new Player();
         Stone stone = new Stone();
         Post post = new Post();
-        Enemy enemy = new Enemy();
+
         Platforms platforms = new Platforms();
         // Initialzes The Window
         Raylib.InitWindow(1920, 1000, "Window");
@@ -17,7 +17,6 @@ class game
             #region Update
             player.Update();
             post.Update();
-            enemy.Update();
             #endregion
             #region Render
             double timer = Raylib.GetTime();

@@ -7,11 +7,11 @@ public abstract class GameObjects
 }
 public class Player : GameObjects
 {
-    double timer = Raylib.GetTime();
     public Vector2 position = new Vector2(320, 820);
     bool isGrounded = true;
     const int jumpheight = 800;
     int playerSpeed = 4;
+    float fallspeed = Raylib.GetFrameTime() * 10;
     float velocity_Y = 0;
     Enemy enemy = new Enemy();
     Post post = new Post();
@@ -20,21 +20,26 @@ public class Player : GameObjects
     FlyingEnemy flyingEnemy = new FlyingEnemy();
     public override void Update()
     {
+        double timer = Raylib.GetTime();
         Rectangle player = new Rectangle(position.X, position.Y, 60, 60);
         Rectangle pole = new Rectangle(915, 650, 100, 230);
         Rectangle pL = new Rectangle(300, 650, 300, 20);
         Rectangle pR = new Rectangle(1230, 650, 300, 20);
         var delta = Raylib.GetFrameTime() * 100;
-
-        enemy.Follow(ref position, pole);
-        enemy.Render();
-
+        if (timer < 60)
+        {
+            enemy.Follow(ref position, pole);
+            enemy.Render();
+            enemy.EnemyColision(player);
+        }
+        else if (timer > 60)
+        {
             flyingEnemy.Render();
-            flyingEnemy.Follow(position);
-
+            flyingEnemy.Follow(position, pole, pL, pR);
+        }
         #region CheckCollision
-        enemy.EnemyColision(player);
         stone.Collision(player);
+        flyingEnemy.Collision(player);
         string side = post.CheckCollision(ref position, playerSpeed);
         switch (side)
         {
@@ -125,7 +130,7 @@ public class Player : GameObjects
         }
         if (!isGrounded) // pulls player back down
         {
-            velocity_Y -= Raylib.GetFrameTime() * 10;
+            velocity_Y -= fallspeed;
             position.Y -= velocity_Y;
         }
         if (position.Y >= 820) // Puts player on the ground
@@ -133,6 +138,7 @@ public class Player : GameObjects
             isGrounded = true;
             position.Y = 820;
             velocity_Y = 0;
+            fallspeed = Raylib.GetFrameTime() * 10;
         }
         #endregion
         #region Map (boarder of the window) 
@@ -159,8 +165,7 @@ public class Enemy : GameObjects
     int enemySpeed = 2;
     Vector2 position = new Vector2(800, 860);
     Vector2 position2 = new Vector2(1300, 860);
-    public override void Update()
-    { }
+    public override void Update() { }
     public void Follow(ref Vector2 p, Rectangle post)
     {
         if (p.X > position.X)
@@ -211,6 +216,7 @@ public class Stone : GameObjects
     public override void Render()
     {
         double timer = Raylib.GetTime();
+        if (timer > 60) return;
         if (timer > 10)
         {
             Raylib.DrawCircle((int)stoneArr[0].X, (int)stoneArr[0].Y, 20, Color.Brown);
@@ -247,7 +253,6 @@ public class Stone : GameObjects
                 stoneArr[i].X = random;
                 stoneArr[i].Y = 20;
             }
-
         }
     }
     internal void Collision(Rectangle player)
@@ -285,7 +290,6 @@ public class Post : GameObjects
     }
     public override void Update()
     {
-        flyingEnemy.Bonk(post);
     }
     public string CheckCollision(ref Vector2 position, int playerSpeed)
     {
@@ -320,6 +324,7 @@ public class Platforms : GameObjects
 {
     Rectangle pL = new Rectangle(300, 650, 300, 20);
     Rectangle pR = new Rectangle(1230, 650, 300, 20);
+    FlyingEnemy flyingEnemy = new FlyingEnemy();
     public override void Render()
     {
         Raylib.DrawRectangle((int)pL.X, (int)pL.Y, (int)pL.Width, (int)pL.Height, Color.Black);
@@ -387,16 +392,19 @@ public class Platforms : GameObjects
 public class FlyingEnemy : GameObjects
 {
     Vector2 position = new Vector2(900, 100);
-    public override void Update()
-    {
-
-    }
+    int enemySpeed = 2;
+    float velocity_Y;
+    float velocity_X;
+    public override void Update() { }
     public override void Render()
     {
         Raylib.DrawCircle((int)position.X, (int)position.Y, 30, Color.DarkGreen);
     }
-    public void Follow(Vector2 player)
+    public void Follow(Vector2 player, Rectangle pole, Rectangle pL, Rectangle pR)
     {
+        Rectangle enemy = new Rectangle(position, 30, 30);
+        Console.WriteLine(position);
+
         if (position.X > player.X)
         {
             position.X -= enemySpeed;
@@ -415,55 +423,107 @@ public class FlyingEnemy : GameObjects
             position.Y -= enemySpeed;
         }
 
+        #region Collision
+        // pole
+        //if (Raylib.CheckCollisionRecs(enemy, pole))
+        //{
+        //    right
+        //    if (position.X >= pole.X + pole.Width - enemySpeed)
+        //    {
+        //        Console.WriteLine("CollisionM");
+        //        velocity_X = 100 * Raylib.GetFrameTime();
+        //        position.X += velocity_X;
+        //    }
+        //    left
+        //    else if (position.X + enemy.Width <= pole.X + enemySpeed)
+        //    {
+        //        Console.WriteLine("CollisionM");
+        //        velocity_X = 100 * Raylib.GetFrameTime();
+        //        position.X -= velocity_X;
+        //    }
+        //    bottom
+        //    else if (position.Y < pole.Y + pole.Height && position.Y > pole.Y)
+        //    {
+        //        Console.WriteLine("CollisionM");
+        //        velocity_Y = 100 * Raylib.GetFrameTime();
+        //        position.Y += velocity_Y;
+        //    }
+        //    Top
+        //    else if (position.Y + enemy.Height - enemySpeed <= pole.Y + enemySpeed)
+        //    {
+        //        Console.WriteLine("CollisionM");
+        //        velocity_Y = 100 * Raylib.GetFrameTime();
+        //        position.Y -= velocity_Y;
+        //    }
+        //}
+        //left platform
+        //if (Raylib.CheckCollisionRecs(enemy, pL))
+        //{
+        //    right
+        //    if (position.X >= pL.X + pL.Width - enemySpeed)
+        //    {
+        //        Console.WriteLine("CollisionL");
+        //        velocity_X = 100 * Raylib.GetFrameTime();
+        //        position.X += velocity_X;
+        //    }
+        //    left
+        //    else if (position.X + enemy.Width <= pL.X + enemySpeed)
+        //    {
+        //        Console.WriteLine("CollisionL");
+        //        velocity_X = 100 * Raylib.GetFrameTime();
+        //        position.X -= velocity_X;
+        //    }
+        //    bottom
+        //    else if (position.Y < pL.Y + pL.Height && position.Y > pL.Y)
+        //    {
+        //        Console.WriteLine("CollisionL");
+        //        velocity_Y = 100 * Raylib.GetFrameTime();
+        //        position.Y += velocity_Y;
+        //    }
+        //    Top
+        //    else if (position.Y + enemy.Height - enemySpeed <= pL.Y + enemySpeed)
+        //    {
+        //        Console.WriteLine("CollisionL");
+        //        velocity_Y = 100 * Raylib.GetFrameTime();
+        //        position.Y -= velocity_Y;
+        //    }
+        //}
+        //right platform
+        //if (Raylib.CheckCollisionRecs(enemy, pR))
+        //{
+        //    right
+        //    if (position.X >= pR.X + pR.Width - enemySpeed)
+        //    {
+        //        Console.WriteLine("CollisionR");
+        //        velocity_X = 100 * Raylib.GetFrameTime();
+        //        position.X += velocity_X;
+        //    }
+        //    left
+        //    else if (position.X + enemy.Width <= pR.X + enemySpeed)
+        //    {
+        //        Console.WriteLine("CollisionR");
+        //        position.X -= 100;
+        //    }
+        //    bottom
+        //    else if (position.Y < pR.Y + pR.Height && position.Y > pR.Y)
+        //    {
+        //        Console.WriteLine("CollisionR");
+        //        position.Y += 100;
+        //    }
+        //    Top
+        //    else if (position.Y + enemy.Height - enemySpeed <= pR.Y + enemySpeed)
+        //    {
+        //        Console.WriteLine("CollisionR");
+        //        position.Y -= 100;
+        //    }
+        //}
+        #endregion
     }
     public void Collision(Rectangle player)
     {
         if (Raylib.CheckCollisionCircleRec(position, 30, player))
         {
             Raylib.CloseWindow();
-        }
-    }
-    public void Bonk(Rectangle gameObject)
-    {
-                Console.WriteLine("CollisionL");
-                velocity_Y = 100 * Raylib.GetFrameTime();
-                position.Y += velocity_Y;
-            }
-            // Top
-            else if (position.Y + enemy.Height - enemySpeed <= pL.Y + enemySpeed)
-        {
-                Console.WriteLine("CollisionL");
-                velocity_Y = 100 * Raylib.GetFrameTime();
-                position.Y -= velocity_Y;
-            }
-        }
-        // right platform
-        if (Raylib.CheckCollisionRecs(enemy, pR))
-        {
-            // right
-            if (position.X >= gameObject.X + gameObject.Width - enemySpeed)
-            {
-                Console.WriteLine("Collision");
-                position.X += 10;
-            }
-            // left
-            else if (position.X + enemy.Width <= gameObject.X + enemySpeed)
-            {
-                Console.WriteLine("Collision");
-                position.X -= 10;
-            }
-            //bottom
-            else if (position.Y < gameObject.Y + gameObject.Height && position.Y > gameObject.Y)
-            {
-                Console.WriteLine("Collision");
-                position.Y += 10;
-            }
-            // Top
-            else if (position.Y + enemy.Height - enemySpeed <= gameObject.Y + enemySpeed)
-            {
-                Console.WriteLine("Collision");
-                position.Y -= 10;
-            }
         }
     }
 }
