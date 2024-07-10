@@ -23,7 +23,7 @@ class game
             // Draws Background and Game Objects
             Raylib.BeginDrawing();
             Raylib.ClearBackground(Color.SkyBlue);
-            Raylib.DrawText($"Timesurvived: {timer:0} sec", 320, 10, 20, Color.White);
+            aRaylib.DrawText($"Timesurvived: {timer:0} sec", 320, 10, 20, Color.White);
             //Background
             Raylib.DrawCircle(30, 20, 100, Color.Yellow); // Sun
             Raylib.DrawRectangle(00, 880, 1920, 150, Color.Green); // Floor
