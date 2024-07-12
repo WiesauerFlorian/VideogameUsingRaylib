@@ -22,7 +22,7 @@ public class Player : GameObjects
     public override void Update()
     {
     }
-    public void UpdatePlayer(Vector2[] stoneArr)
+    public bool UpdatePlayer(Vector2[] stoneArr, bool isRunning)
     {
         double timer = Raylib.GetTime();
         Rectangle player = new Rectangle(position.X, position.Y, 60, 60);
@@ -30,20 +30,20 @@ public class Player : GameObjects
         Rectangle pL = new Rectangle(300, 650, 300, 20);
         Rectangle pR = new Rectangle(1230, 650, 300, 20);
         var delta = Raylib.GetFrameTime() * 100;
-        if (timer < 60)
-        {
+        
             enemy.Follow(ref position, pole);
             enemy.Render();
-            enemy.EnemyColision(player);
-        }
-        else if (timer > 60)
+            isRunning = enemy.EnemyCollision(player, isRunning);
+        
+                
+        if (timer > 45)
         {
             flyingEnemy.Render();
             flyingEnemy.Follow(position, pole, pL, pR);
-            flyingEnemy.Collision(player);
+            isRunning = flyingEnemy.Collision(player, isRunning);
         }
         #region CheckCollision
-        stone.Collision(player, ref stoneArr);
+        isRunning = stone.Collision(player, ref stoneArr, isRunning);
         string side = post.CheckCollision(ref position, playerSpeed);
         switch (side)
         {
@@ -51,10 +51,7 @@ public class Player : GameObjects
                 isGrounded = true;
                 velocity_Y = 0;
                 position.Y = pole.Y - player.Height;
-                if (Raylib.IsKeyPressed(KeyboardKey.Space))
-                {
-                    isGrounded = false;
-                }
+                if (Raylib.IsKeyPressed(KeyboardKey.Space)) isGrounded = false;
                 break;
             case "right":
                 position.X = pole.X + pole.Width;
@@ -68,14 +65,8 @@ public class Player : GameObjects
                 break;
 
             case " ":
-                if (position.Y < 820)
-                {
-                    isGrounded = false;
-                }
-                else if (position.Y > 820)
-                {
-                    isGrounded = true;
-                }
+                if (position.Y < 820) isGrounded = false;
+                else if (position.Y > 820) isGrounded = true;
                 break;
 
 
@@ -121,14 +112,8 @@ public class Player : GameObjects
 
         #endregion
         #region Movement
-        if (Raylib.IsKeyDown(KeyboardKey.D)) // moves to the right
-        {
-            position.X += delta * playerSpeed;
-        }
-        if (Raylib.IsKeyDown(KeyboardKey.A)) // moves to the left
-        {
-            position.X -= delta * playerSpeed;
-        }
+        if (Raylib.IsKeyDown(KeyboardKey.D)) position.X += delta * playerSpeed; // moves to the right
+        if (Raylib.IsKeyDown(KeyboardKey.A)) position.X -= delta * playerSpeed; // moves to the left 
         if (Raylib.IsKeyDown(KeyboardKey.Space) && isGrounded == true) // Jumps 
         {
             velocity_Y = jumpheight * Raylib.GetFrameTime();
@@ -160,6 +145,7 @@ public class Player : GameObjects
             case > 1830: position.X = 1830; break;
         }
         #endregion
+        return isRunning;
     }
 
     public override void Render()
@@ -170,32 +156,26 @@ public class Player : GameObjects
 } // working
 public class Enemy : GameObjects
 {
+    
     int enemySpeed = 2;
     Vector2 position = new Vector2(800, 860);
     Vector2 position2 = new Vector2(1300, 860);
     public override void Update() { }
     public void Follow(ref Vector2 p, Rectangle post)
     {
-        if (p.X > position.X)
-            position.X += enemySpeed;
-        else if (p.X < position.X)
-            position.X -= enemySpeed;
+        if (Raylib.GetTime() > 40) enemySpeed = 1;
 
-        if (p.X > position2.X)
-            position2.X += enemySpeed;
-        else if (p.X < position2.X)
-            position2.X -= enemySpeed;
+        if (p.X > position.X) position.X += enemySpeed;
+        else if (p.X < position.X) position.X -= enemySpeed;
+
+        if (p.X > position2.X) position2.X += enemySpeed;
+        else if (p.X < position2.X) position2.X -= enemySpeed;
 
         Rectangle e = new Rectangle(position.X, position.Y, 20, 20);
         Rectangle en = new Rectangle(position2.X, position2.Y, 20, 20);
-        if (Raylib.CheckCollisionCircleRec(position, 20, post))
-        {
-            position.X = post.X - e.Width;
-        }
-        if (Raylib.CheckCollisionCircleRec(position2, 20, post))
-        {
-            position2.X = post.X + en.Width + post.Width;
-        }
+
+        if (Raylib.CheckCollisionCircleRec(position, 20, post)) position.X = post.X - e.Width;
+        if (Raylib.CheckCollisionCircleRec(position2, 20, post)) position2.X = post.X + en.Width + post.Width;  
     }
     public override void Render()
     {
@@ -203,10 +183,12 @@ public class Enemy : GameObjects
         Raylib.DrawCircle((int)position.X, (int)position.Y, 20, Color.Brown);
         Raylib.DrawCircle((int)position2.X, (int)position2.Y, 20, Color.Brown);
     }
-    public void EnemyColision(Rectangle p)
+    public bool EnemyCollision(Rectangle p, bool isRunning)
     {
-        if (Raylib.CheckCollisionCircleRec(position, 20, p)) Raylib.CloseWindow();
-        if (Raylib.CheckCollisionCircleRec(position2, 20, p)) Raylib.CloseWindow();
+        if (Raylib.CheckCollisionCircleRec(position, 20, p)) isRunning = false;
+        if (Raylib.CheckCollisionCircleRec(position2, 20, p)) isRunning = false;
+
+        return isRunning;
     }
 } // working
 public class Stone : GameObjects
@@ -220,107 +202,59 @@ public class Stone : GameObjects
     internal void RenderRocks(ref Vector2[] stoneArr)
     {
         double timer = Raylib.GetTime();
-        if (timer > 60) return;
-        if (timer > 10)
+        if (timer > 40) return;
+        for (int i = 0; i < stoneArr.Length; i++)
         {
-            Raylib.DrawCircle((int)stoneArr[0].X, (int)stoneArr[0].Y, 30, Color.Brown);
-        }
-        if (timer > 15)
-        {
-            Raylib.DrawCircle((int)stoneArr[1].X, (int)stoneArr[1].Y, 30, Color.Brown);
-        }
-        if (timer > 20)
-        {
-            Raylib.DrawCircle((int)stoneArr[2].X, (int)stoneArr[2].Y, 30, Color.Brown);
-        }
-        if (timer > 25)
-        {
-            Raylib.DrawCircle((int)stoneArr[3].X, (int)stoneArr[3].Y, 30, Color.Brown);
-        }
-        if (timer > 30)
-        {
-            Raylib.DrawCircle((int)stoneArr[4].X, (int)stoneArr[4].Y, 30, Color.Brown);
-        }
-        if (timer > 35)
-        {
-            Raylib.DrawCircle((int)stoneArr[5].X, (int)stoneArr[5].Y, 30, Color.Brown);
-        }
-        if (timer > 40)
-        {
-            Raylib.DrawCircle((int)stoneArr[6].X, (int)stoneArr[6].Y, 30, Color.Brown);
-        }
-        if (timer > 45)
-        {
-            Raylib.DrawCircle((int)stoneArr[7].X, (int)stoneArr[7].Y, 30, Color.Brown);
-        }
-        if (timer > 50)
-        {
-            Raylib.DrawCircle((int)stoneArr[8].X, (int)stoneArr[8].Y, 30, Color.Brown);
+            if (timer > i + 10)
+            {
+                Raylib.DrawCircle((int)stoneArr[i].X, (int)stoneArr[i].Y, 30, Color.Gray);
+            }
         }
     }
     internal void UpdateRocks(Vector2[] stoneArr)
     {
         for (int i = 0; i < stoneArr.Length; i++)
         {
-            if (stoneArr[i].Y < 850)
+            if (stoneArr[i].Y < 1030)
             {
                 stoneArr[i].Y += 4;
-                RenderRocks(ref stoneArr);
             }
             else
             {
                 int random = Random.Shared.Next(0, 1830);
                 stoneArr[i].X = random;
-                stoneArr[i].Y = 20;
+                stoneArr[i].Y = -40;
             }
         }
     }
-    internal void Collision(Rectangle player, ref Vector2[] stoneArr)
+
+    internal Vector2[] SetBackRocks(Vector2[] stoneArr)
     {
         double timer = Raylib.GetTime();
-        if(timer > 60) return;
-        if (timer > 10)
+        for (int i = 0; i < stoneArr.Length; i++)
         {
-            if(Raylib.CheckCollisionCircleRec(stoneArr[0], 30, player)) Raylib.CloseWindow();
+            if(timer < i+10) stoneArr[i].Y = -40;
         }
-        if (timer > 15)
+        return stoneArr;
+    }
+    internal bool Collision(Rectangle player, ref Vector2[] stoneArr, bool isRunning)
+    {
+        double timer = Raylib.GetTime();
+        if (timer > 40) return isRunning;
+        for (int i = 0; i < stoneArr.Length; i++)
         {
-            if (Raylib.CheckCollisionCircleRec(stoneArr[1], 30, player)) Raylib.CloseWindow();
+            if (timer > i + 10)
+            {
+                if (Raylib.CheckCollisionCircleRec(stoneArr[i], 30, player)) isRunning = false;
+            }
         }
-        if (timer > 20)
-        {
-            if (Raylib.CheckCollisionCircleRec(stoneArr[2], 30, player)) Raylib.CloseWindow();
-        }
-        if (timer > 25)
-        {
-            if (Raylib.CheckCollisionCircleRec(stoneArr[3], 30, player)) Raylib.CloseWindow();
-        }
-        if (timer > 30)
-        {
-            if (Raylib.CheckCollisionCircleRec(stoneArr[4], 30, player)) Raylib.CloseWindow();
-        }
-        if (timer > 35)
-        {
-            if (Raylib.CheckCollisionCircleRec(stoneArr[5], 30, player)) Raylib.CloseWindow();
-        }
-        if (timer > 40)
-        {
-            if (Raylib.CheckCollisionCircleRec(stoneArr[6], 30, player)) Raylib.CloseWindow();
-        }
-        if (timer > 45)
-        {
-            if (Raylib.CheckCollisionCircleRec(stoneArr[7], 30, player)) Raylib.CloseWindow();
-        }
-        if (timer > 50)
-        {
-            if (Raylib.CheckCollisionCircleRec(stoneArr[8], 30, player)) Raylib.CloseWindow();
-        }
+        return isRunning;
     }
 } // not working (the collision box of the stones is in the top left corner)
 public class Post : GameObjects
 {
     Rectangle post = new Rectangle(915, 650, 100, 230);
-    FlyingEnemy flyingEnemy = new FlyingEnemy();
+    
     public override void Render()
     {
         Raylib.DrawRectangle((int)post.X, (int)post.Y, (int)post.Width, (int)post.Height, Color.Black);
@@ -361,7 +295,7 @@ public class Platforms : GameObjects
 {
     Rectangle pL = new Rectangle(300, 650, 300, 20);
     Rectangle pR = new Rectangle(1230, 650, 300, 20);
-    FlyingEnemy flyingEnemy = new FlyingEnemy();
+    
     public override void Render()
     {
         Raylib.DrawRectangle((int)pL.X, (int)pL.Y, (int)pL.Width, (int)pL.Height, Color.Black);
@@ -433,23 +367,19 @@ public class FlyingEnemy : GameObjects
     public override void Update() { }
     public override void Render()
     {
-        if (Raylib.GetTime() > 90)
+        if (Raylib.GetTime() > 60)
         {
-            Raylib.DrawCircle((int)position.X, (int)position.Y, 30, Color.Red);
-            enemySpeed = 3;
+            Raylib.DrawCircle((int)position.X, (int)position.Y, 65, Color.Red);
+            enemySpeed = 2;
         }
         else
         {
-            Raylib.DrawCircle((int)position.X, (int)position.Y, 30, Color.DarkGreen);
+            Raylib.DrawCircle((int)position.X, (int)position.Y, 40, Color.DarkGreen);
             enemySpeed = 2;
         }
     }
     public void Follow(Vector2 player, Rectangle pole, Rectangle pL, Rectangle pR)
     {
-        Rectangle enemy = new Rectangle(position, 30, 30);
-        Console.WriteLine(position);
-
-
         if (position.X > player.X)
         {
             position.X -= enemySpeed;
@@ -467,108 +397,23 @@ public class FlyingEnemy : GameObjects
         {
             position.Y -= enemySpeed;
         }
-
-        #region Collision
-        // pole
-        //if (Raylib.CheckCollisionRecs(enemy, pole))
-        //{
-        //    right
-        //    if (position.X >= pole.X + pole.Width - enemySpeed)
-        //    {
-        //        Console.WriteLine("CollisionM");
-        //        velocity_X = 100 * Raylib.GetFrameTime();
-        //        position.X += velocity_X;
-        //    }
-        //    left
-        //    else if (position.X + enemy.Width <= pole.X + enemySpeed)
-        //    {
-        //        Console.WriteLine("CollisionM");
-        //        velocity_X = 100 * Raylib.GetFrameTime();
-        //        position.X -= velocity_X;
-        //    }
-        //    bottom
-        //    else if (position.Y < pole.Y + pole.Height && position.Y > pole.Y)
-        //    {
-        //        Console.WriteLine("CollisionM");
-        //        velocity_Y = 100 * Raylib.GetFrameTime();
-        //        position.Y += velocity_Y;
-        //    }
-        //    Top
-        //    else if (position.Y + enemy.Height - enemySpeed <= pole.Y + enemySpeed)
-        //    {
-        //        Console.WriteLine("CollisionM");
-        //        velocity_Y = 100 * Raylib.GetFrameTime();
-        //        position.Y -= velocity_Y;
-        //    }
-        //}
-        //left platform
-        //if (Raylib.CheckCollisionRecs(enemy, pL))
-        //{
-        //    right
-        //    if (position.X >= pL.X + pL.Width - enemySpeed)
-        //    {
-        //        Console.WriteLine("CollisionL");
-        //        velocity_X = 100 * Raylib.GetFrameTime();
-        //        position.X += velocity_X;
-        //    }
-        //    left
-        //    else if (position.X + enemy.Width <= pL.X + enemySpeed)
-        //    {
-        //        Console.WriteLine("CollisionL");
-        //        velocity_X = 100 * Raylib.GetFrameTime();
-        //        position.X -= velocity_X;
-        //    }
-        //    bottom
-        //    else if (position.Y < pL.Y + pL.Height && position.Y > pL.Y)
-        //    {
-        //        Console.WriteLine("CollisionL");
-        //        velocity_Y = 100 * Raylib.GetFrameTime();
-        //        position.Y += velocity_Y;
-        //    }
-        //    Top
-        //    else if (position.Y + enemy.Height - enemySpeed <= pL.Y + enemySpeed)
-        //    {
-        //        Console.WriteLine("CollisionL");
-        //        velocity_Y = 100 * Raylib.GetFrameTime();
-        //        position.Y -= velocity_Y;
-        //    }
-        //}
-        //right platform
-        //if (Raylib.CheckCollisionRecs(enemy, pR))
-        //{
-        //    right
-        //    if (position.X >= pR.X + pR.Width - enemySpeed)
-        //    {
-        //        Console.WriteLine("CollisionR");
-        //        velocity_X = 100 * Raylib.GetFrameTime();
-        //        position.X += velocity_X;
-        //    }
-        //    left
-        //    else if (position.X + enemy.Width <= pR.X + enemySpeed)
-        //    {
-        //        Console.WriteLine("CollisionR");
-        //        position.X -= 100;
-        //    }
-        //    bottom
-        //    else if (position.Y < pR.Y + pR.Height && position.Y > pR.Y)
-        //    {
-        //        Console.WriteLine("CollisionR");
-        //        position.Y += 100;
-        //    }
-        //    Top
-        //    else if (position.Y + enemy.Height - enemySpeed <= pR.Y + enemySpeed)
-        //    {
-        //        Console.WriteLine("CollisionR");
-        //        position.Y -= 100;
-        //    }
-        //}
-        #endregion
     }
-    public void Collision(Rectangle player)
+    public bool Collision(Rectangle player, bool isRunning)
     {
-        if (Raylib.CheckCollisionCircleRec(position, 30, player))
+        if (Raylib.GetTime() < 60)
         {
-            Raylib.CloseWindow();
+            if (Raylib.CheckCollisionCircleRec(position, 40, player))
+            {
+                isRunning = false;
+            }
         }
+        else
+        {
+            if (Raylib.CheckCollisionCircleRec(position, 65, player))
+            {
+                isRunning = false;
+            }
+        }
+        return isRunning;
     }
 }
